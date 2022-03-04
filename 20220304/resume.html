@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app">
+    {{ count }}
+    <input type="button" value="+" @click='plus'>
+    <input type="button" value="-" @click='minus'>
+    <hr>
+    <input type="text" v-model='newitem' @keydown.enter='additem'>
+    <input type="button" value="+" @click='additem'>
+    <br>
+    <input type="text" v-model='keyword'>
+    <ul>
+      <li v-for="item in filterList" :key="item.id">{{ item.text }}
+        <input type="button" value="X" @click="del(item)">
+      </li>
+    </ul>
+
+  </div>
+  <script src="https://unpkg.com/vue@3"></script>
+  <script>
+    const { ref, reactive, computed, watch, onMounted } = Vue
+    Vue.createApp({
+      setup() {
+        // 測試
+        const count = ref(0)
+        const plus = () => {
+          count.value++
+        }
+        const minus = () => {
+          count.value--
+        }
+
+        // 履歷表
+        const list = reactive([])
+        const newitem = ref('')
+        const keyword = ref('')
+        let id = 1
+
+        const additem = () => {
+          list.push({
+            id,
+            text: newitem.value
+          })
+          newitem.value = ''
+          id++
+        }
+        const del = (item) => {
+          const idx = list.findIndex(listiem => {
+            return listiem.id === item.id
+          })
+          if (idx > -1) {
+            list.splice(idx, 1)
+          }
+        }
+
+        const filterList = computed(() => {
+          return list.filter(item => {
+            return item.text.includes(keyword.value)
+          })
+        })
+
+        watch(list, () => {
+          localStorage.setItem('resume', JSON.stringify({ id, list }))
+        })
+
+        onMounted(() => {
+          const store = JSON.parse(localStorage.getItem('resume'))
+          if (store) {
+            id = store.id
+            for (const item of store.list) {
+              list.push(item)
+            }
+          }
+        })
+
+        return {
+          count,
+          plus,
+          minus,
+          list,
+          newitem,
+          additem,
+          del,
+          keyword,
+          filterList
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+
+</html>
